@@ -11,7 +11,7 @@
 
     <div class="form-group">
         <label for="numberInput">Enter a number (N):</label>
-        <InputNumber id="numberInput" class="form-control" @bind-Value="primeInputModel.Number" min="1" />
+        <InputNumber id="numberInput" class="form-control" @bind-Value="primeInputModel.Number" />
         <ValidationMessage For="@(() => primeInputModel.Number)" />
         <button class="btn btn-primary mt-2" type="submit">Generate Table</button>
     </div>
@@ -59,6 +59,6 @@
     {
         [Required(ErrorMessage = "Number is required")]
         [Range(1, 200, ErrorMessage = "Number must be at least 1 and less than 200")]
-        public int Number { get; set; } = 2; // Default to 1
+        public int Number { get; set; } = 1; // Default to 1
     }
 }
