@@ -1,17 +1,10 @@
 ﻿namespace BlazingPrimeGenerator.Services;
 
-public class PrimeService
+public class PrimeService(ILogger<PrimeService>  logger)
 {
-    private readonly ILogger<PrimeService> _logger;
-
-    public PrimeService(ILogger<PrimeService>  logger)
-    {
-        _logger = logger;
-    }
-    
     public List<int> GeneratePrimeNumbers(int numbersToGenerate)
     {
-        _logger.LogInformation($"Generating {numbersToGenerate} numbers");
+        logger.LogInformation($"Generating {numbersToGenerate} numbers");
         
         var primeNumbers = new List<int>();
         var number = 2;
@@ -28,7 +21,7 @@ public class PrimeService
         return primeNumbers;
     }
 
-    private bool IsNumberPrime(int number)
+    public bool IsNumberPrime(int number)
     {
         if (number <= 1) return false;
         if (number == 2) return true;
