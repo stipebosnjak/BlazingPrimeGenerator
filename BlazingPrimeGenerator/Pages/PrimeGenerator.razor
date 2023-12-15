@@ -1,0 +1,65 @@
+﻿@page "/prime-generator"
+@using BlazingPrimeGenerator.Services
+@using System.ComponentModel.DataAnnotations
+@inject PrimeService PrimeService
+
+<h3>Prime Number Multiplication Table Generator</h3>
+
+
+<EditForm Model="@primeInputModel" OnValidSubmit="GenerateMultiplicationTable">
+    <DataAnnotationsValidator />
+
+    <div class="form-group">
+        <label for="numberInput">Enter a number (N):</label>
+        <InputNumber id="numberInput" class="form-control" @bind-Value="primeInputModel.Number" min="1" />
+        <ValidationMessage For="@(() => primeInputModel.Number)" />
+        <button class="btn btn-primary mt-2" type="submit">Generate Table</button>
+    </div>
+</EditForm>
+
+@if (primeNumbers is {Count: > 0 })
+{
+    <h4>Multiplication Table</h4>
+    <table class="table table-bordered mt-3">
+        <thead>
+        <tr>
+            <th></th>
+            @foreach (var primeNumber in primeNumbers)
+            {
+                <th>@primeNumber</th>
+            }
+        </tr>
+        </thead>
+        <tbody>
+        @foreach (var primeNumber in primeNumbers)
+        {
+            <tr>
+                <td>@primeNumber</td>
+                @foreach (var primeNumber2 in primeNumbers)
+                {
+                    <td>@(primeNumber * primeNumber2)</td>
+                }
+            </tr>
+        }
+        </tbody>
+    </table>
+}
+
+@code {
+    
+    private PrimeInputModel primeInputModel = new PrimeInputModel();
+    private int inputNumber;
+    private List<int>? primeNumbers;
+
+    private void GenerateMultiplicationTable()
+    {
+        primeNumbers = PrimeService.GeneratePrimeNumbers(primeInputModel.Number);
+    }
+    
+    public class PrimeInputModel
+    {
+        [Required(ErrorMessage = "Number is required")]
+        [Range(1, 200, ErrorMessage = "Number must be at least 1 and less than 200")]
+        public int Number { get; set; } = 2; // Default to 1
+    }
+}
