@@ -20,7 +20,6 @@ public class PrimeService(ILogger<PrimeService>  logger)
 
         return primeNumbers;
     }
-
     public bool IsNumberPrime(int number)
     {
         if (number <= 1) return false;

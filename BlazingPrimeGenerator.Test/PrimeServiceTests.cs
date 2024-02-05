@@ -1,4 +1,6 @@
-﻿using BlazingPrimeGenerator.Services;
+﻿using System;
+using System.Collections.Generic;
+using BlazingPrimeGenerator.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 
@@ -38,5 +40,9 @@ public class PrimeServiceTests
         var result = _service.IsNumberPrime(number);
         Assert.Equal(result,isNumberPrime);
     }
+
   
+
 }
+
+    
