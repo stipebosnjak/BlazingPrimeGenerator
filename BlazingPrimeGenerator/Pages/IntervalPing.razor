@@ -1,10 +1,10 @@
 ﻿@page "/interval-ping"
-@using System.Diagnostics
 @inject IJSRuntime Js;
 
 <h1>Interval Timer</h1>
 
 <Button Color="ButtonColor.Primary" Size="Size.Large" @onclick="Start"> START </Button>
+<Button Color="ButtonColor.Warning" Size="Size.Large" @onclick="Stop"> STOP </Button>
 @* <button class="btn btn-primary" @onclick="Start">START</button> *@
 <p>
     <label>
@@ -20,9 +20,7 @@
 <p>Current Run Time @CurrentRunTime</p>
 
 <h1 class="display-3">@counter.ToString("F2") seconds</h1>
-@* <Progress Class="mb-3"> *@
-@*     <ProgressBar @ref="progressBar" Width="@ProgressBarWidth" /> *@
-@* </Progress> *@
+
 <audio id="player">
     <source id="playerSource" src=""/>
 </audio>
@@ -46,13 +44,11 @@
     private void IncreaseProgressBar()
     {
         progressBar.IncreaseWidth(10);
-        
-        //progressBar.SetLabel($"{progressBar.GetWidth()}%");
     }
-    private static System.Timers.Timer aTimer;
+    private static System.Timers.Timer timer;
     private float counter = 0;
     private float elapsed = 0;
-
+    private bool _isStarted = false;
     public double ProgressBarWidth
     {
         get
@@ -73,11 +69,11 @@
 
     public void StartTimer()
     {
-        aTimer = new System.Timers.Timer(10);
-        aTimer.Elapsed += CountDownTimer;
-        aTimer.Enabled = true;
+        timer = new System.Timers.Timer(10);
+        timer.Elapsed += ElapsedEventHandler;
+        timer.Enabled = true;
     }
-    public void CountDownTimer(Object source, System.Timers.ElapsedEventArgs e)
+    public void ElapsedEventHandler(Object source, System.Timers.ElapsedEventArgs e)
     {
         InvokeAsync(StateHasChanged);
         counter -= 0.01f;
@@ -94,16 +90,28 @@
     
     void Start()
     {
-        if(_cts!=null)
-        _cts.Cancel();
+        if(_isStarted)
+            return;
+        _isStarted = true;
+        if (_cts != null)
+        {
+            _cts.Cancel();
+            timer.Stop();
+        }
+      
         _cts = new CancellationTokenSource();
-        Task.Factory.StartNew(StartAsync, _cts.Token);
+        Task.Factory.StartNew(() => StartAsync(_cts.Token), _cts.Token);
     }
     void Stop()
     {
+        if (_isStarted)
+        {
+            _isStarted = false;
+        }
         _cts.Cancel();
+        timer.Stop();
     }
-   async void StartAsync()
+   async void StartAsync(CancellationToken ct)
    {
         var stages = GenerateStages();
       
@@ -124,6 +132,9 @@
                 CurrentRun = i + 1;
                 foreach (var runMoveTiming in stage.RunMoveTimings)
                 {
+                    if(ct.IsCancellationRequested)
+                        break;
+                    
                     counter = runMoveTiming.Value;
                     CurrentRunMove = runMoveTiming.Key;
                     CurrentRunTime = runMoveTiming.Value;
@@ -131,15 +142,21 @@
                     await Task.Delay(TimeSpan.FromSeconds(runMoveTiming.Value));
                     PlayAudioFileRunMove();
                 }
-
-                Pause = true;
-                counter = 10f;
-                await Task.Delay(runPause);
-                PlayAudioFileRunStart();
-                Pause = false;
+                if(ct.IsCancellationRequested)
+                    break;
+                if (i + 1 < stage.Runs)
+                {
+                    Pause = true;
+                    counter = runPause.Seconds;
+                    await Task.Delay(runPause);
+                    PlayAudioFileRunStart();
+                    Pause = false;
+                }
             }
+            if(ct.IsCancellationRequested)
+                break;
             Pause = true;
-            counter = 30f;
+            counter = stagePause.Seconds;
             await Task.Delay(stagePause);
             PlayAudioFileRunStart();
             Pause = false;
